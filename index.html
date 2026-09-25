@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pesquise hospitais, clínicas e laboratórios da rede credenciada dos principais planos de saúde: Amil, Bradesco, Sul América, Hapvida e Liv Saúde.">
+    <meta name="theme-color" content="#9E1E4C">
+    <title>Rede de Atendimento | Pesquisa de Hospitais, Clínicas e Laboratórios</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
+
+    <!-- Barra superior institucional -->
+    <div class="topbar">
+        <div class="topbar-inner">
+            <span class="topbar-brand"><i class="fas fa-shield-heart"></i> Rede de Atendimento — Planos de Saúde</span>
+            <a href="admin.html" class="topbar-link" title="Acesso restrito">
+                <i class="fas fa-lock"></i> Área Administrativa
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header header-public">
+            <div class="hero-badges">
+                <span class="hero-badge"><i class="fas fa-database"></i> Base atualizada</span>
+                <span class="hero-badge"><i class="fas fa-bolt"></i> Busca instantânea</span>
+                <span class="hero-badge"><i class="fas fa-mobile-screen"></i> 100% responsivo</span>
+            </div>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-hospital-alt"></i>
+                </div>
+                <h1>Rede de Atendimento</h1>
+            </div>
+            <p class="subtitle">
+                Encontre <strong>hospitais, clínicas e laboratórios credenciados</strong> dos principais
+                planos de saúde com rapidez e praticidade.
+            </p>
+            <div class="operadora-strip" aria-label="Operadoras disponíveis">
+                <span class="strip-item">Amil</span>
+                <span class="strip-sep">•</span>
+                <span class="strip-item">Amil Selecionada</span>
+                <span class="strip-sep">•</span>
+                <span class="strip-item">Bradesco</span>
+                <span class="strip-sep">•</span>
+                <span class="strip-item">Sul América</span>
+                <span class="strip-sep">•</span>
+                <span class="strip-item">Hapvida</span>
+                <span class="strip-sep">•</span>
+                <span class="strip-item">Liv Saúde</span>
+            </div>
+        </header>
+
+        <main class="main-content" id="conteudo">
+            <section class="search-section" aria-label="Busca de estabelecimentos">
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Digite o nome do hospital, clínica, laboratório ou cidade..."
+                            autocomplete="off"
+                            aria-label="Campo de busca"
+                            >
+                        <button id="searchBtn" class="search-btn" aria-label="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <button id="clearBtn" class="clear-btn" title="Limpar pesquisa">
+                        <i class="fas fa-times"></i>
+                        Limpar
+                    </button>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <div class="filter-group-header">
+                            <label id="lblOperadoras">Filtrar por operadora:</label>
+                            <div class="filter-quick-actions">
+                                <button type="button" id="allOperators" class="quick-action-btn"><i class="fas fa-check-double"></i> Todas</button>
+                                <button type="button" id="noneOperators" class="quick-action-btn"><i class="fas fa-times-circle"></i> Nenhuma</button>
+                            </div>
+                        </div>
+                        <div class="checkbox-group operadoras-group" role="group" aria-labelledby="lblOperadoras">
+                            <label class="checkbox-item operadora-checkbox selected" data-operadora="amil">
+                                <input type="checkbox" id="amil" checked>
+                                <span class="checkmark amil"></span>
+                                <span class="operadora-label">Amil</span>
+                            </label>
+                            <label class="checkbox-item operadora-checkbox selected" data-operadora="amil-selecionada">
+                                <input type="checkbox" id="amil-selecionada" checked>
+                                <span class="checkmark amil-selecionada"></span>
+                                <span class="operadora-label">Amil Selecionada</span>
+                            </label>
+                            <label class="checkbox-item operadora-checkbox selected" data-operadora="bradesco">
+                                <input type="checkbox" id="bradesco" checked>
+                                <span class="checkmark bradesco"></span>
+                                <span class="operadora-label">Bradesco</span>
+                            </label>
+                            <label class="checkbox-item operadora-checkbox selected" data-operadora="sulamerica">
+                                <input type="checkbox" id="sulamerica" checked>
+                                <span class="checkmark sulamerica"></span>
+                                <span class="operadora-label">Sul América</span>
+                            </label>
+                            <label class="checkbox-item operadora-checkbox selected" data-operadora="hapvida">
+                                <input type="checkbox" id="hapvida" checked>
+                                <span class="checkmark hapvida"></span>
+                                <span class="operadora-label">Hapvida</span>
+                            </label>
+                            <label class="checkbox-item operadora-checkbox selected" data-operadora="liv-saude">
+                                <input type="checkbox" id="liv-saude" checked>
+                                <span class="checkmark liv-saude"></span>
+                                <span class="operadora-label">Liv Saúde</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Filtros avançados -->
+                    <div class="advanced-filters">
+                        <button type="button" id="toggleAdvanced" class="toggle-advanced-btn" aria-expanded="false" aria-controls="advancedContent">
+                            <span><i class="fas fa-sliders"></i> Filtros avançados</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="advancedContent" class="advanced-filters-content hidden">
+                            <div class="form-row-adv">
+                                <div class="adv-group">
+                                    <label for="tipoFilter">Tipo de estabelecimento:</label>
+                                    <select id="tipoFilter">
+                                        <option value="">Todos os tipos</option>
+                                        <option value="hospital">Hospital</option>
+                                        <option value="clinica">Clínica</option>
+                                        <option value="laboratorio">Laboratório</option>
+                                    </select>
+                                </div>
+                                <div class="adv-group">
+                                    <label for="estadoFilter">Estado (UF):</label>
+                                    <select id="estadoFilter">
+                                        <option value="">Todos os estados</option>
+                                        <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option><option value="AM">Amazonas</option><option value="BA">Bahia</option><option value="CE">Ceará</option><option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option><option value="GO">Goiás</option><option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option><option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option><option value="PR">Paraná</option><option value="PE">Pernambuco</option><option value="PI">Piauí</option><option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option><option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option><option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="results-section" aria-live="polite">
+                <div id="resultSummary" class="result-summary hidden"></div>
+
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Pesquisando...</p>
+                </div>
+
+                <div id="noResults" class="no-results hidden">
+                    <i class="fas fa-magnifying-glass-location"></i>
+                    <h3>Nenhum resultado encontrado</h3>
+                    <p>Tente ajustar os filtros, verificar a grafia do nome ou buscar por outra cidade.</p>
+                </div>
+
+                <div id="resultsContainer" class="results-container"></div>
+            </section>
+        </main>
+
+        <footer class="footer footer-public">
+            <p>&copy; 2025 Rede de Atendimento. Todos os direitos reservados.</p>
+            <p class="footer-note">As informações da rede credenciada são fornecidas pelas operadoras e podem sofrer alterações. Confirme sempre com a operadora antes de agendamentos.</p>
+        </footer>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- Configuração do Firebase -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLjxxFLwx9VU23VyYpjsVjcdVB98Pzls4",
+            authDomain: "rede-atendimento-planos.firebaseapp.com",
+            projectId: "rede-atendimento-planos",
+            storageBucket: "rede-atendimento-planos.appspot.com",
+            messagingSenderId: "805398823851",
+            appId: "1:805398823851:web:c8edb87faa4483490688ee",
+            measurementId: "G-V6GF3T87F5"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
+    <!-- Script principal -->
+    <script src="script.js"></script>
+</body>
+</html>
