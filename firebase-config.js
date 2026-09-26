@@ -13,12 +13,12 @@
 // ============================================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBLjxxFLwx9VU23VyYpjsVjcdVB98Pzls4",          // <-- troque
-    authDomain: "rede-atendimento-planos.firebaseapp.com",       // <-- troque
-    projectId: "rede-atendimento-planos",                        // <-- troque
-    storageBucket: "rede-atendimento-planos.appspot.com",        // <-- troque
-    messagingSenderId: "805398823851",                           // <-- troque
-    appId: "1:805398823851:web:c8edb87faa4483490688ee"           // <-- troque
+    apiKey: "AIzaSyBFZx74qysIKcIaGf3_A6wQlaL9kiQs8-M",          // 
+    authDomain: "rede-de-atendimento-saude.firebaseapp.com",       // 
+    projectId: "rede-de-atendimento-saude",                        // 
+    storageBucket: "rede-de-atendimento-saude.firebasestorage.app",        // 
+    messagingSenderId: "1097115884518",                           // 
+    appId: "1:1097115884518:web:197b7281c5e56a54369427"           // 
 };
 
 firebase.initializeApp(firebaseConfig);
