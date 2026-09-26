@@ -126,7 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 normalizar(h.estado).includes(termo);
 
             const matchOperadoras = Array.isArray(h.operadoras) &&
-                h.operadoras.some(op => filtros.includes(op));
+                h.operadoras.some(op => {
+                    const opNorm = normalizar(op);
+                    return filtros.some(f => f === op || normalizar (f) === opNorm);
+                });
 
             const matchTipo = !tipoSelecionado || normalizar(h.tipo) === normalizar(tipoSelecionado);
 
