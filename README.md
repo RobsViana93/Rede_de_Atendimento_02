@@ -14,10 +14,16 @@ Projeto desenvolvido para uso em corretora de seguros.
 ├── script.js                   # Lógica de busca/filtros da página pública
 ├── styles.css                  # Estilos (página pública + admin)
 ├── admin.html                  # Área administrativa (login Firebase Auth + CRUD)
+├── firebase-config.js          # ÚNICO arquivo com as chaves do projeto Firebase
 ├── firebase.json               # Config de deploy (Hosting + Firestore rules)
 └── firestore/
     └── firestore.rules         # Regras de segurança do Firestore
 ```
+
+> **Migrando para outro projeto Firebase?** Edite somente `firebase-config.js`
+> (copie o snippet `firebaseConfig` do console: Engrenagem → Configurações do
+> projeto → Seus apps → Web). Depois publique as regras de `firestore/firestore.rules`
+> no novo projeto e crie o usuário de login em Authentication.
 
 > **Nota:** a pasta `admin/` antiga (versão descontinuada que usava `localStorage`)
 > e o arquivo vazio `auth-protection.js` foram removidos. A versão canônica do

@@ -304,16 +304,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
+    <!-- Configuração do Firebase (edite apenas firebase-config.js ao migrar de projeto) -->
+    <script src="firebase-config.js"></script>
     <script>
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLjxxFLwx9VU23VyYpjsVjcdVB98Pzls4",
-            authDomain: "rede-atendimento-planos.firebaseapp.com",
-            projectId: "rede-atendimento-planos",
-            storageBucket: "rede-atendimento-planos.appspot.com",
-            messagingSenderId: "805398823851",
-            appId: "1:805398823851:web:c8edb87faa4483490688ee"
-        };
 
         // Função para normalizar strings para comparação
 function normalizarString(str) {
@@ -499,7 +492,7 @@ function criarModalDuplicatas(duplicatas, callback) {
     });
 }
 
-        firebase.initializeApp(firebaseConfig);
+        // initializeApp já executado em firebase-config.js
         const db = firebase.firestore();
         const auth = firebase.auth();
 

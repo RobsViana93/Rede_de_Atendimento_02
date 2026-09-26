@@ -180,19 +180,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Configuração do Firebase -->
+    <!-- Configuração do Firebase (edite apenas firebase-config.js ao migrar de projeto) -->
+    <script src="firebase-config.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLjxxFLwx9VU23VyYpjsVjcdVB98Pzls4",
-            authDomain: "rede-atendimento-planos.firebaseapp.com",
-            projectId: "rede-atendimento-planos",
-            storageBucket: "rede-atendimento-planos.appspot.com",
-            messagingSenderId: "805398823851",
-            appId: "1:805398823851:web:c8edb87faa4483490688ee",
-            measurementId: "G-V6GF3T87F5"
-        };
-
-        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
     </script>
 
