@@ -777,9 +777,8 @@ function criarModalDuplicatas(duplicatas, callback) {
                 }
                 const cabecalhos = ['Nome', 'Estado', 'Cidade', 'Tipo', 'Operadoras', 'Modalidades', 'Planos'];
                 const exemplos = [
-                    { Nome: 'Hospital Santa Casa (exemplo - apague esta linha)', Estado: 'SP', Cidade: 'São Paulo', Tipo: 'hospital', Operadoras: 'Amil, Bradesco, SulAmérica', Modalidades: 'Enfermaria, Apartamento', Planos: 'Amil One, Bradesco Top Nacional' },
-                    { Nome: 'Clínica Vida (exemplo - apague esta linha)', Estado: 'RJ', Cidade: 'Rio de Janeiro', Tipo: 'clínica', Operadoras: 'Unimed, Golden Cross', Modalidades: 'Ambulatorial', Planos: 'Unimed Intermediária' }
-                ];
+                    { Nome: 'Hospital Santa Casa (exemplo - apague esta linha)', Estado: 'SP', Cidade: 'São Paulo', Tipo: 'hospital', Operadoras: 'amil, bradesco, sulamerica', Modalidades: 'Enfermaria, Apartamento', Planos: 'Amil One, Bradesco Top Nacional' },
+                    { Nome: 'Clínica Vida (exemplo - apague esta linha)', Estado: 'RJ', Cidade: 'Rio de Janeiro', Tipo: 'clinica', Operadoras: 'hapvida, liv-saude, amil-selecionada', Modalidades: 'Ambulatorial', Planos: 'Hapvida Essencial, Liv Saúde Plus' }                ];
                 const ws = XLSX.utils.json_to_sheet(exemplos, { header: cabecalhos });
                 ws['!cols'] = [{ wch: 40 }, { wch: 8 }, { wch: 20 }, { wch: 12 }, { wch: 35 }, { wch: 30 }, { wch: 40 }];
                 const wb = XLSX.utils.book_new();
@@ -792,7 +791,9 @@ function criarModalDuplicatas(duplicatas, callback) {
         alert('Planilha vazia ou formato inválido.');
         return;
     }
-    
+
+    const OPERADORAS_VALIDAS = ['amil', 'amil-selecionada', 'bradesco', 'sulamerica', 'hapvida', 'liv-saude'];
+                
     let dadosProcessados = jsonData.map((row, index) => {
         // Validação de campos obrigatórios
         if (!row.Nome || !row.Estado || !row.Cidade) {
@@ -860,6 +861,7 @@ function criarModalDuplicatas(duplicatas, callback) {
                     `<li style="padding: 8px; border-bottom: 1px solid #9E1E4C; margin-bottom: 5px;">
                         <strong style="color: #ECECEC;">${item.nome}</strong><br>
                         <small>${item.cidade}, ${item.estado} • ${item.tipo} • ${item.operadoras.length} operadora(s)</small>
+                        ${(function(){const invalidas=item.operadoras.filter(op=>!OPERADORAS_VALIDAS.includes(op));return invalidas.length?`<div style="color:#ff9b9b;margin-top:5px;font-size:0.85rem;"><i class="fas fa-exclamation-triangle"></i> Não reconhecidas no portal: ${invalidas.join(', ')} — use exatamente: ${OPERADORAS_VALIDAS.join(', ')}</div>`:''})()}
                     </li>`
                 ).join('')}
             </ul>
