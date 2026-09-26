@@ -1,0 +1,4 @@
+# Configuração real do Firebase (NUNCA versionar)
+firebase-config.js
+.env
+*.log
