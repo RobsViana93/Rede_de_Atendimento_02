@@ -11,6 +11,7 @@ permalink: /admin.html
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* Estilos para tela de login */
         .login-overlay {
@@ -252,6 +253,15 @@ permalink: /admin.html
                 <div id="upload" class="tab-content">
                     <div class="upload-section">
                         <h2>Upload de Planilha Excel</h2>
+                        <p style="color: #8F8F8F; margin-bottom: 15px;">
+                            <i class="fas fa-download"></i>
+                            Baixe o modelo abaixo, preencha no Excel e faça o upload.
+                            Colunas obrigatórias: <strong style="color: #ECECEC;"> Nome, Estado, Cidade</strong>.
+                            Opcionais: Tipo (hospital/clínica/etc.), Operadoras (separadas por vírgula), Modalidades, Planos.
+                        </p>>
+                        <button type="button" id="baixarModelo" class="btn btn-outline" style="margin-bottom: 20px;">
+                            <i class="fas fa-file-excel"></i> Baixar Modelo Excel (.xlsx)
+                        </button>
                         <div class="upload-area" id="uploadArea">
                             <div class="upload-content">
                                 <i class="fas fa-file-excel"></i>
@@ -759,7 +769,23 @@ function criarModalDuplicatas(duplicatas, callback) {
         }
     }
 }
-
+            // --- MODELO DE PLANILHA (.XLSX) ---
+            function baixarModeloExcel() {
+                if (typeof XLSX === 'undefined') {
+                    alert('Biblioteca de planilhas não carregou. Recarregue a página (Ctrl+Shift+R) e tente novamente.');
+                    return;
+                }
+                const cabecalhos = ['Nome', 'Estado', 'Cidade', 'Tipo', 'Operadoras', 'Modalidades', 'Planos'];
+                const exemplos = [
+                    { Nome: 'Hospital Santa Casa (exemplo - apague esta linha)', Estado: 'SP', Cidade: 'São Paulo', Tipo: 'hospital', Operadoras: 'Amil, Bradesco, SulAmérica', Modalidades: 'Enfermaria, Apartamento', Planos: 'Amil One, Bradesco Top Nacional' },
+                    { Nome: 'Clínica Vida (exemplo - apague esta linha)', Estado: 'RJ', Cidade: 'Rio de Janeiro', Tipo: 'clínica', Operadoras: 'Unimed, Golden Cross', Modalidades: 'Ambulatorial', Planos: 'Unimed Intermediária' }
+                ];
+                const ws = XLSX.utils.json_to_sheet(exemplos, { header: cabecalhos });
+                ws['!cols'] = [{ wch: 40 }, { wch: 8 }, { wch: 20 }, { wch: 12 }, { wch: 35 }, { wch: 30 }, { wch: 40 }];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Hospitais');
+                XLSX.writeFile(wb, 'modelo_upload_hospitais.xlsx');
+            }
             // --- LÓGICA DE UPLOAD DE PLANILHA ---
             function processarDadosPlanilha(jsonData) {
     if (!jsonData || jsonData.length === 0) {
@@ -926,6 +952,12 @@ function criarModalDuplicatas(duplicatas, callback) {
             };
 
             // --- EVENT LISTENERS ---
+
+            // Baixar modelo Excel
+            const baixarModeloBtn = document.getElementById('baixarModelo');
+            if (baixarModeloBtn) {
+                baixarModeloBtn.addEventListener('click', baixarModeloExcel);
+            }
             
             // Upload de arquivo
                 if (fileInput) {
