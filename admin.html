@@ -495,6 +495,27 @@ function criarModalDuplicatas(duplicatas, callback) {
     });
 }
 
+        // ---- Guard: verifica se o firebase-config.js foi publicado com valores reais ----
+        (function verificarConfig() {
+            var msg = document.getElementById('errorMessage');
+            function erroConfig(texto) {
+                if (msg) { msg.textContent = texto; msg.style.display = 'block'; }
+                var btn = document.getElementById('loginForm') ? document.querySelector('#loginForm button[type="submit"]') : null;
+                if (btn) btn.disabled = true;
+            }
+            if (typeof firebase === 'undefined' || typeof firebaseConfig === 'undefined') {
+                erroConfig('Arquivo de configuração do Firebase não encontrado no servidor. Confirme que ele foi criado na pasta do projeto e faça um novo deploy.');
+                return;
+            }
+            var valoresPendentes = ['COLE_AQUI_SUA_API_KEY', 'SEU_MESSAGING_SENDER_ID', 'SEU_APP_ID'];
+            var temPendente = Object.keys(firebaseConfig).some(function (k) {
+                return valoresPendentes.indexOf(String(firebaseConfig[k])) !== -1;
+            });
+            if (temPendente) {
+                erroConfig('O arquivo de configuração ainda contém valores de exemplo. Edite o firebase-config.js da pasta local, cole os valores reais do Console Firebase (Configurações do projeto → Seus apps) e rode "firebase deploy --only hosting" novamente.');
+            }
+        })();
+
         // initializeApp já executado em firebase-config.js
         const db = firebase.firestore();
         const auth = firebase.auth();
