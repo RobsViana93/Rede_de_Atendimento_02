@@ -1,3 +1,6 @@
+---
+permalink: /admin.html
+---
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -7,7 +10,6 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* Estilos para tela de login */
@@ -253,9 +255,9 @@
                         <p style="color: #8F8F8F; margin-bottom: 15px;">
                             <i class="fas fa-download"></i>
                             Baixe o modelo abaixo, preencha no Excel e faça o upload.
-                            Colunas obrigatórias: <strong style="color: #ECECEC;"> Nome, Estado, Cidade</strong>.
+                            Colunas obrigatórias: <strong style="color: #ECECEC;">Nome, Estado, Cidade</strong>.
                             Opcionais: Tipo (hospital/clínica/etc.), Operadoras (separadas por vírgula), Modalidades, Planos.
-                        </p>>
+                        </p>
                         <button type="button" id="baixarModelo" class="btn btn-outline" style="margin-bottom: 20px;">
                             <i class="fas fa-file-excel"></i> Baixar Modelo Excel (.xlsx)
                         </button>
@@ -454,7 +456,7 @@ function criarModalDuplicatas(duplicatas, callback) {
                         </div>
                     `).join('')}
                 </div>
-
+                
                 <p style="color: #8F8F8F; margin-bottom: 15px; font-size: 0.9rem;">
                     <strong>Ignorar duplicadas:</strong> envia apenas os registros novos, pulando os que já existem no banco.<br>
                     <strong>Prosseguir mesmo assim:</strong> envia tudo e cria registros repetidos no banco.
@@ -524,6 +526,7 @@ function criarModalDuplicatas(duplicatas, callback) {
         modal.remove();
         callback('prosseguir');
     });
+}
 
         // ---- Guard: verifica se o firebase-config.js foi publicado com valores reais ----
         (function verificarConfig() {
@@ -545,6 +548,19 @@ function criarModalDuplicatas(duplicatas, callback) {
                 erroConfig('O arquivo de configuração ainda contém valores de exemplo. Edite o firebase-config.js da pasta local, cole os valores reais do Console Firebase (Configurações do projeto → Seus apps) e rode "firebase deploy --only hosting" novamente.');
             }
         })();
+
+        // ---- Guard de seguranca: se a pagina quebrou durante o carregamento,
+        // o login ainda deve funcionar e os erros devem aparecer na tela.
+        window.addEventListener('error', function (ev) {
+            try {
+                var msgEl = document.getElementById('errorMessage');
+                if (msgEl && !window.__erroExibido) {
+                    msgEl.textContent = 'Ocorreu um erro ao carregar a pagina (' + ev.message + '). O login continua disponivel; use F12 para mais detalhes.';
+                    msgEl.style.display = 'block';
+                    window.__erroExibido = true;
+                }
+            } catch (e) {}
+        });
 
         // initializeApp já executado em firebase-config.js
         const db = firebase.firestore();
@@ -614,8 +630,26 @@ function criarModalDuplicatas(duplicatas, callback) {
                     case 'auth/user-disabled':
                         errorMsg = 'Esta conta foi desativada. Contate o administrador do sistema.';
                         break;
+                    case 'auth/argument-error':
+                        errorMsg = 'Configuração do Firebase inválida (API Key incorreta ou projeto incompatível). Confira os valores em firebase-config.js copiando-os diretamente do Console Firebase > Configurações do projeto > Seus apps, e rode o deploy novamente.';
+                        break;
+                    case 'auth/api-key-not-valid':
+                    case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+                        errorMsg = 'A API Key informada não é válida. Copie novamente o valor de "apiKey" do Console Firebase > Configurações do projeto > Seus apps (Web) para dentro de firebase-config.js e faça novo deploy.';
+                        break;
+                    case 'auth/internal-error':
+                        errorMsg = 'O Firebase não conseguiu processar a solicitação. Verifique se todos os valores de firebase-config.js (apiKey, authDomain, projectId, messagingSenderId, appId) foram preenchidos corretamente com os dados reais do projeto.';
+                        break;
+                    case 'auth/admin-restricted-operation':
+                    case 'auth/unauthorized-publisher':
+                        errorMsg = 'A API Key publicada está bloqueada por restrições. Você criou uma chave RESTRICTA no Google Cloud Console — ela não permite login. Use a "API key" padrão gerada automaticamente pelo Firebase (Console Firebase > Configurações do projeto > Seus apps > SDK setup and configuration), ou edite a restrição da chave em Google Cloud Console > APIs e Serviços > Credenciais > Restrictions: deixe "Application restrictions" como "None" (ou "HTTP referrers" incluindo rede-de-atendimento-saude.web.app) e garanta que "API restrictions" inclua "Firebase Authentication API" / "Identity Toolkit API".';
+                        break;
+                    case 'auth/unauthorized-domain':
+                        errorMsg = 'Este domínio não está autorizado no Firebase. Acesse Console Firebase > Authentication > Settings > Authorized domains e adicione o domínio do site.';
+                        break;
                     default:
-                        errorMsg = 'Ocorreu um erro ao tentar fazer login. Tente novamente mais tarde.';
+                        // Mostra o código real do erro para diagnóstico — remova após resolver o problema
+                        errorMsg = 'Erro inesperado ao fazer login (' + (error && error.code ? error.code : 'sem código') + '). Abra o console do navegador (F12) para mais detalhes.';
                         console.error(error); // Mantemos o log do erro para depuração
                 }
                 
@@ -721,8 +755,8 @@ function criarModalDuplicatas(duplicatas, callback) {
             }
 
             // --- FORMULÁRIO MANUAL ---
-        if (manualForm) {
-            manualForm.addEventListener('submit', async (e) => {
+            if (manualForm) {
+                manualForm.addEventListener('submit', async (e) => {
             e.preventDefault();
         
             const formData = new FormData(manualForm);
@@ -785,10 +819,11 @@ function criarModalDuplicatas(duplicatas, callback) {
             carregarDadosIniciais();
         } catch (error) {
             console.error("Erro ao salvar:", error);
-            alert('Erro ao salvar os dados.');
+                alert('Erro ao salvar os dados.');
+            }
         }
-    }
-}
+            }
+
             // --- MODELO DE PLANILHA (.XLSX) ---
             function baixarModeloExcel() {
                 if (typeof XLSX === 'undefined') {
@@ -797,23 +832,23 @@ function criarModalDuplicatas(duplicatas, callback) {
                 }
                 const cabecalhos = ['Nome', 'Estado', 'Cidade', 'Tipo', 'Operadoras', 'Modalidades', 'Planos'];
                 const exemplos = [
-                    { Nome: 'Hospital Santa Casa (exemplo - apague esta linha)', Estado: 'SP', Cidade: 'São Paulo', Tipo: 'hospital', Operadoras: 'amil, bradesco, sulamerica', Modalidades: 'Enfermaria, Apartamento', Planos: 'Amil One, Bradesco Top Nacional' },
-                    { Nome: 'Clínica Vida (exemplo - apague esta linha)', Estado: 'RJ', Cidade: 'Rio de Janeiro', Tipo: 'clinica', Operadoras: 'hapvida, liv-saude, amil-selecionada', Modalidades: 'Ambulatorial', Planos: 'Hapvida Essencial, Liv Saúde Plus' }                ];
+                    { Nome: 'Hospital Santa Casa (exemplo - apague esta linha)', Estado: 'SP', Cidade: 'São Paulo', Tipo: 'hospital', Operadoras: 'Amil, Bradesco, SulAmérica', Modalidades: 'Enfermaria, Apartamento', Planos: 'Amil One, Bradesco Top Nacional' },
+                    { Nome: 'Clínica Vida (exemplo - apague esta linha)', Estado: 'RJ', Cidade: 'Rio de Janeiro', Tipo: 'clínica', Operadoras: 'Unimed, Golden Cross', Modalidades: 'Ambulatorial', Planos: 'Unimed Intermediária' }
+                ];
                 const ws = XLSX.utils.json_to_sheet(exemplos, { header: cabecalhos });
                 ws['!cols'] = [{ wch: 40 }, { wch: 8 }, { wch: 20 }, { wch: 12 }, { wch: 35 }, { wch: 30 }, { wch: 40 }];
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Hospitais');
                 XLSX.writeFile(wb, 'modelo_upload_hospitais.xlsx');
             }
+
             // --- LÓGICA DE UPLOAD DE PLANILHA ---
             function processarDadosPlanilha(jsonData) {
     if (!jsonData || jsonData.length === 0) {
         alert('Planilha vazia ou formato inválido.');
         return;
     }
-
-    const OPERADORAS_VALIDAS = ['amil', 'amil-selecionada', 'bradesco', 'sulamerica', 'hapvida', 'liv-saude'];
-                
+    
     let dadosProcessados = jsonData.map((row, index) => {
         // Validação de campos obrigatórios
         if (!row.Nome || !row.Estado || !row.Cidade) {
@@ -881,7 +916,6 @@ function criarModalDuplicatas(duplicatas, callback) {
                     `<li style="padding: 8px; border-bottom: 1px solid #9E1E4C; margin-bottom: 5px;">
                         <strong style="color: #ECECEC;">${item.nome}</strong><br>
                         <small>${item.cidade}, ${item.estado} • ${item.tipo} • ${item.operadoras.length} operadora(s)</small>
-                        ${(function(){const invalidas=item.operadoras.filter(op=>!OPERADORAS_VALIDAS.includes(op));return invalidas.length?`<div style="color:#ff9b9b;margin-top:5px;font-size:0.85rem;"><i class="fas fa-exclamation-triangle"></i> Não reconhecidas no portal: ${invalidas.join(', ')} — use exatamente: ${OPERADORAS_VALIDAS.join(', ')}</div>`:''})()}
                     </li>`
                 ).join('')}
             </ul>
@@ -974,13 +1008,13 @@ function criarModalDuplicatas(duplicatas, callback) {
             };
 
             // --- EVENT LISTENERS ---
-
+            
             // Baixar modelo Excel
             const baixarModeloBtn = document.getElementById('baixarModelo');
             if (baixarModeloBtn) {
                 baixarModeloBtn.addEventListener('click', baixarModeloExcel);
             }
-            
+
             // Upload de arquivo
                 if (fileInput) {
                     fileInput.addEventListener('change', (e) => {
@@ -1055,6 +1089,7 @@ function criarModalDuplicatas(duplicatas, callback) {
                         return;
                     }
                     if (acao === 'ignorar') {
+                        // Remove dos dados a enviar os registros que ja existem no banco
                         const chavesDuplicadas = new Set(
                             duplicatasExistentes.map(d =>
                                 normalizarString(d.novoRegistro.nome) + '|' +
@@ -1078,6 +1113,9 @@ function criarModalDuplicatas(duplicatas, callback) {
                     }
                     await realizarUpload();
                 });
+            } else {
+                await realizarUpload();
+            }
         } catch (error) {
             console.error("Erro na verificação:", error);
             alert("Erro ao verificar duplicatas: " + error.message);
