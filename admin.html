@@ -454,8 +454,12 @@ function criarModalDuplicatas(duplicatas, callback) {
                         </div>
                     `).join('')}
                 </div>
-                
-                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+
+                <p style="color: #8F8F8F; margin-bottom: 15px; font-size: 0.9rem;">
+                    <strong>Ignorar duplicadas:</strong> envia apenas os registros novos, pulando os que já existem no banco.<br>
+                    <strong>Prosseguir mesmo assim:</strong> envia tudo e cria registros repetidos no banco.
+                </p>
+                <div style="display: flex; gap: 15px; justify-content: flex-end; flex-wrap: wrap;">
                     <button id="cancelarDuplicata" style="
                         background: #8F8F8F;
                         color: #ECECEC;
@@ -467,6 +471,18 @@ function criarModalDuplicatas(duplicatas, callback) {
                         transition: all 0.3s ease;
                     ">
                         <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button id="ignorarDuplicata" style="
+                        background: #1B783D;
+                        color: #ECECEC;
+                        border: 2px solid #1B783D;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                    ">
+                        <i class="fas fa-filter"></i> Ignorar Duplicadas e Enviar o Restante
                     </button>
                     <button id="prosseguirDuplicata" style="
                         background: #FF1168;
@@ -489,18 +505,25 @@ function criarModalDuplicatas(duplicatas, callback) {
     
     const modal = document.getElementById('duplicateModal');
     const cancelarBtn = document.getElementById('cancelarDuplicata');
+    const ignorarBtn = document.getElementById('ignorarDuplicata');
     const prosseguirBtn = document.getElementById('prosseguirDuplicata');
-    
+
     cancelarBtn.addEventListener('click', () => {
         modal.remove();
-        callback(false);
+        callback('cancelar');
     });
-    
+
+    if (ignorarBtn) {
+        ignorarBtn.addEventListener('click', () => {
+            modal.remove();
+            callback('ignorar');
+        });
+    }
+
     prosseguirBtn.addEventListener('click', () => {
         modal.remove();
-        callback(true);
+        callback('prosseguir');
     });
-}
 
         // ---- Guard: verifica se o firebase-config.js foi publicado com valores reais ----
         (function verificarConfig() {
@@ -1027,14 +1050,34 @@ function criarModalDuplicatas(duplicatas, callback) {
                 confirmUploadBtn.innerHTML = '<i class="fas fa-upload"></i> Confirmar Upload';
                 confirmUploadBtn.disabled = false;
                 
-                criarModalDuplicatas(duplicatasExistentes, async (prosseguir) => {
-                    if (prosseguir) {
-                        await realizarUpload();
+                criarModalDuplicatas(duplicatasExistentes, async (acao) => {
+                    if (acao === 'cancelar') {
+                        return;
                     }
+                    if (acao === 'ignorar') {
+                        const chavesDuplicadas = new Set(
+                            duplicatasExistentes.map(d =>
+                                normalizarString(d.novoRegistro.nome) + '|' +
+                                normalizarString(d.novoRegistro.cidade) + '|' +
+                                normalizarString(d.novoRegistro.estado)
+                            )
+                        );
+                        const totalAntes = dadosUpload.length;
+                        dadosUpload = dadosUpload.filter(reg => {
+                            const chave = normalizarString(reg.nome) + '|' +
+                                         normalizarString(reg.cidade) + '|' +
+                                         normalizarString(reg.estado);
+                            return !chavesDuplicadas.has(chave);
+                        });
+                        const ignorados = totalAntes - dadosUpload.length;
+                        if (dadosUpload.length === 0) {
+                            alert('Todos os ' + totalAntes + ' registro(s) da planilha já existem no banco de dados. Nada foi enviado.');
+                            return;
+                        }
+                        alert(ignorados + ' duplicata(s) serão ignoradas. Enviando ' + dadosUpload.length + ' registro(s) novo(s)...');
+                    }
+                    await realizarUpload();
                 });
-            } else {
-                await realizarUpload();
-            }
         } catch (error) {
             console.error("Erro na verificação:", error);
             alert("Erro ao verificar duplicatas: " + error.message);
