@@ -12,14 +12,17 @@ permalink: /admin.html
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Estilos modernos e limpos para tela de login */
+        /* Estilos modernos e limpos para tela de login com contraste off-white */
         .login-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 50% 0%, #FFFFFF 0%, #F1F5F9 100%);
+            background: #F1F5F9;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(226, 232, 240, 0.8) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(226, 232, 240, 0.8) 0px, transparent 50%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -29,10 +32,10 @@ permalink: /admin.html
 
         .login-container {
             background: #FFFFFF;
-            padding: 40px;
+            padding: 44px 36px;
             border-radius: 18px;
-            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-            border: 1px solid #E2E8F0;
+            box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+            border: 1.5px solid #CBD5E1;
             width: 100%;
             max-width: 420px;
             text-align: center;
@@ -268,12 +271,12 @@ permalink: /admin.html
                             <div class="form-group">
                                 <label>Operadoras *</label>
                                 <div class="checkbox-group">
-                                    <label class="checkbox-item operadora-checkbox"><input type="checkbox" name="operadoras" value="amil"><span class="checkmark amil"></span><span class="operadora-label">Amil Padrão</span></label>
-                                    <label class="checkbox-item operadora-checkbox"><input type="checkbox" name="operadoras" value="amil-selecionada"><span class="checkmark amil-selecionada"></span><span class="operadora-label">Amil Selecionada</span></label>
-                                    <label class="checkbox-item operadora-checkbox"><input type="checkbox" name="operadoras" value="bradesco"><span class="checkmark bradesco"></span><span class="operadora-label">Bradesco</span></label>
-                                    <label class="checkbox-item operadora-checkbox"><input type="checkbox" name="operadoras" value="sulamerica"><span class="checkmark sulamerica"></span><span class="operadora-label">Sul América</span></label>
-                                    <label class="checkbox-item operadora-checkbox"><input type="checkbox" name="operadoras" value="hapvida"><span class="checkmark hapvida"></span><span class="operadora-label">Hapvida</span></label>
-                                    <label class="checkbox-item operadora-checkbox"><input type="checkbox" name="operadoras" value="liv-saude"><span class="checkmark liv-saude"></span><span class="operadora-label">Liv Saúde</span></label>
+                                    <label class="checkbox-item operadora-checkbox" data-operadora="amil"><input type="checkbox" name="operadoras" value="amil"><span class="checkmark amil"></span><span class="operadora-label">Amil Padrão</span></label>
+                                    <label class="checkbox-item operadora-checkbox" data-operadora="amil-selecionada"><input type="checkbox" name="operadoras" value="amil-selecionada"><span class="checkmark amil-selecionada"></span><span class="operadora-label">Amil Selecionada</span></label>
+                                    <label class="checkbox-item operadora-checkbox" data-operadora="bradesco"><input type="checkbox" name="operadoras" value="bradesco"><span class="checkmark bradesco"></span><span class="operadora-label">Bradesco</span></label>
+                                    <label class="checkbox-item operadora-checkbox" data-operadora="sulamerica"><input type="checkbox" name="operadoras" value="sulamerica"><span class="checkmark sulamerica"></span><span class="operadora-label">Sul América</span></label>
+                                    <label class="checkbox-item operadora-checkbox" data-operadora="hapvida"><input type="checkbox" name="operadoras" value="hapvida"><span class="checkmark hapvida"></span><span class="operadora-label">Hapvida</span></label>
+                                    <label class="checkbox-item operadora-checkbox" data-operadora="liv-saude"><input type="checkbox" name="operadoras" value="liv-saude"><span class="checkmark liv-saude"></span><span class="operadora-label">Liv Saúde</span></label>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -871,6 +874,23 @@ function criarModalDuplicatas(duplicatas, callback) {
 
             // --- FORMULÁRIO MANUAL ---
             if (manualForm) {
+                // Sincroniza classes visuais dos checkboxes de operadora no formulário manual
+                const operadoraCheckboxes = manualForm.querySelectorAll('.operadora-checkbox');
+                operadoraCheckboxes.forEach(cb => {
+                    const input = cb.querySelector('input[type="checkbox"]');
+                    if (input) {
+                        input.addEventListener('change', () => {
+                            cb.classList.toggle('selected', input.checked);
+                        });
+                    }
+                });
+
+                manualForm.addEventListener('reset', () => {
+                    setTimeout(() => {
+                        operadoraCheckboxes.forEach(cb => cb.classList.remove('selected'));
+                    }, 10);
+                });
+
                 manualForm.addEventListener('submit', async (e) => {
             e.preventDefault();
         
@@ -1287,7 +1307,7 @@ function criarModalDuplicatas(duplicatas, callback) {
                                         </td>
                                         <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0;">
                                             ${(item.operadoras || []).map(op => 
-                                                `<span style="background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-right: 4px; display: inline-block; margin-bottom: 2px;">${getOperadoraNome(op)}</span>`
+                                                `<span class="operadora-badge ${op}" style="margin-right: 4px; margin-bottom: 2px;">${getOperadoraNome(op)}</span>`
                                             ).join('')}
                                         </td>
                                         <td style="padding: 14px 16px; border-bottom: 1px solid #E2E8F0; text-align: center;">

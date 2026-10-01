@@ -1,7 +1,7 @@
 /* =====================================================
    Rede de Atendimento — styles.css (Clean & Modern Design)
    Paleta de Cores:
-   - Canvas: #F8FAFC (Fundo geral da aplicação)
+   - Canvas: #F1F5F9 (Off-white de alto contraste para o fundo geral)
    - Surface: #FFFFFF (Cards de clínicas, modais, painéis)
    - Bordas: #E2E8F0 (Divisores de listas e bordas de inputs)
    - Texto Primário: #0F172A (Títulos, nomes de clínicas e médicos)
@@ -10,7 +10,7 @@
    ===================================================== */
 
 :root {
-    --canvas: #F8FAFC;
+    --canvas: #F1F5F9;
     --surface: #FFFFFF;
     --border: #E2E8F0;
     --border-hover: #CBD5E1;
@@ -155,12 +155,12 @@ body {
     background: var(--surface);
     padding: 40px 30px;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     box-shadow: var(--shadow-sm);
 }
 
 .header-public {
-    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    background: #FFFFFF;
 }
 
 .hero-badges {
@@ -243,11 +243,24 @@ body {
     font-size: 0.88rem;
     font-weight: 600;
     color: var(--text-secondary);
+    background: var(--canvas);
+    padding: 10px 18px;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    border: 1px solid var(--border);
 }
 
 .strip-item {
     color: var(--cta);
+    transition: var(--transition);
 }
+
+.strip-item.amil { color: #0284C7; }
+.strip-item.amil-selecionada { color: #0EA5E9; }
+.strip-item.bradesco { color: #DC2626; }
+.strip-item.sulamerica { color: #EA580C; }
+.strip-item.hapvida { color: #1D4ED8; }
+.strip-item.liv-saude { color: #0F172A; }
 
 .strip-sep {
     color: var(--border-hover);
@@ -371,10 +384,10 @@ body {
 }
 
 .filter-group {
-    background: var(--surface);
+    background: #F8FAFC;
     padding: 24px;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     box-shadow: var(--shadow-sm);
 }
 
@@ -433,24 +446,20 @@ body {
     display: flex;
     align-items: center;
     padding: 12px 16px;
-    background: var(--surface);
+    background: #FFFFFF;
     border: 1.5px solid var(--border);
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: var(--transition);
     user-select: none;
     position: relative;
+    box-shadow: var(--shadow-sm);
 }
 
 .operadora-checkbox:hover {
     border-color: var(--border-hover);
-    background: var(--canvas);
-}
-
-.operadora-checkbox.selected {
-    background: var(--cta-light);
-    border-color: var(--cta);
-    color: var(--cta);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .operadora-checkbox input[type="checkbox"] {
@@ -469,16 +478,12 @@ body {
     align-items: center;
     justify-content: center;
     transition: var(--transition);
-    background: var(--surface);
+    background: #FFFFFF;
     flex-shrink: 0;
 }
 
-.operadora-checkbox.selected .checkmark {
-    background: var(--cta);
-    border-color: var(--cta);
-}
-
-.operadora-checkbox.selected .checkmark::after {
+.operadora-checkbox.selected .checkmark::after,
+.operadora-checkbox:has(input:checked) .checkmark::after {
     content: "\f00c";
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
@@ -486,14 +491,134 @@ body {
     font-size: 11px;
 }
 
+.operadora-label,
 .checkbox-label {
     font-weight: 600;
     font-size: 0.95rem;
     color: var(--text-primary);
+    transition: var(--transition);
 }
 
-.operadora-checkbox.selected .checkbox-label {
-    color: var(--cta);
+/* --- Cores Personalizadas por Operadora --- */
+
+/* Amil: Azul Claro */
+.operadora-checkbox[data-operadora="amil"].selected,
+.operadora-checkbox:has(input[value="amil"]:checked),
+.operadora-checkbox:has(input#amil:checked) {
+    background: #E0F2FE;
+    border-color: #0284C7;
+}
+.operadora-checkbox[data-operadora="amil"].selected .checkmark,
+.operadora-checkbox:has(input[value="amil"]:checked) .checkmark,
+.operadora-checkbox:has(input#amil:checked) .checkmark {
+    background: #0284C7;
+    border-color: #0284C7;
+}
+.operadora-checkbox[data-operadora="amil"].selected .operadora-label,
+.operadora-checkbox[data-operadora="amil"].selected .checkbox-label,
+.operadora-checkbox:has(input[value="amil"]:checked) .operadora-label,
+.operadora-checkbox:has(input#amil:checked) .operadora-label {
+    color: #0369A1;
+}
+
+/* Amil Selecionada: Azul Claro */
+.operadora-checkbox[data-operadora="amil-selecionada"].selected,
+.operadora-checkbox:has(input[value="amil-selecionada"]:checked),
+.operadora-checkbox:has(input#amil-selecionada:checked) {
+    background: #F0F9FF;
+    border-color: #0EA5E9;
+}
+.operadora-checkbox[data-operadora="amil-selecionada"].selected .checkmark,
+.operadora-checkbox:has(input[value="amil-selecionada"]:checked) .checkmark,
+.operadora-checkbox:has(input#amil-selecionada:checked) .checkmark {
+    background: #0EA5E9;
+    border-color: #0EA5E9;
+}
+.operadora-checkbox[data-operadora="amil-selecionada"].selected .operadora-label,
+.operadora-checkbox[data-operadora="amil-selecionada"].selected .checkbox-label,
+.operadora-checkbox:has(input[value="amil-selecionada"]:checked) .operadora-label,
+.operadora-checkbox:has(input#amil-selecionada:checked) .operadora-label {
+    color: #0284C7;
+}
+
+/* Bradesco: Vermelho */
+.operadora-checkbox[data-operadora="bradesco"].selected,
+.operadora-checkbox:has(input[value="bradesco"]:checked),
+.operadora-checkbox:has(input#bradesco:checked) {
+    background: #FEF2F2;
+    border-color: #DC2626;
+}
+.operadora-checkbox[data-operadora="bradesco"].selected .checkmark,
+.operadora-checkbox:has(input[value="bradesco"]:checked) .checkmark,
+.operadora-checkbox:has(input#bradesco:checked) .checkmark {
+    background: #DC2626;
+    border-color: #DC2626;
+}
+.operadora-checkbox[data-operadora="bradesco"].selected .operadora-label,
+.operadora-checkbox[data-operadora="bradesco"].selected .checkbox-label,
+.operadora-checkbox:has(input[value="bradesco"]:checked) .operadora-label,
+.operadora-checkbox:has(input#bradesco:checked) .operadora-label {
+    color: #B91C1C;
+}
+
+/* Sul América: Laranja */
+.operadora-checkbox[data-operadora="sulamerica"].selected,
+.operadora-checkbox:has(input[value="sulamerica"]:checked),
+.operadora-checkbox:has(input#sulamerica:checked) {
+    background: #FFF7ED;
+    border-color: #EA580C;
+}
+.operadora-checkbox[data-operadora="sulamerica"].selected .checkmark,
+.operadora-checkbox:has(input[value="sulamerica"]:checked) .checkmark,
+.operadora-checkbox:has(input#sulamerica:checked) .checkmark {
+    background: #EA580C;
+    border-color: #EA580C;
+}
+.operadora-checkbox[data-operadora="sulamerica"].selected .operadora-label,
+.operadora-checkbox[data-operadora="sulamerica"].selected .checkbox-label,
+.operadora-checkbox:has(input[value="sulamerica"]:checked) .operadora-label,
+.operadora-checkbox:has(input#sulamerica:checked) .operadora-label {
+    color: #C2410C;
+}
+
+/* Hapvida: Azul Escuro */
+.operadora-checkbox[data-operadora="hapvida"].selected,
+.operadora-checkbox:has(input[value="hapvida"]:checked),
+.operadora-checkbox:has(input#hapvida:checked) {
+    background: #EFF6FF;
+    border-color: #1D4ED8;
+}
+.operadora-checkbox[data-operadora="hapvida"].selected .checkmark,
+.operadora-checkbox:has(input[value="hapvida"]:checked) .checkmark,
+.operadora-checkbox:has(input#hapvida:checked) .checkmark {
+    background: #1D4ED8;
+    border-color: #1D4ED8;
+}
+.operadora-checkbox[data-operadora="hapvida"].selected .operadora-label,
+.operadora-checkbox[data-operadora="hapvida"].selected .checkbox-label,
+.operadora-checkbox:has(input[value="hapvida"]:checked) .operadora-label,
+.operadora-checkbox:has(input#hapvida:checked) .operadora-label {
+    color: #1E40AF;
+}
+
+/* Liv Saúde: Azul-marinho */
+.operadora-checkbox[data-operadora="liv-saude"].selected,
+.operadora-checkbox:has(input[value="liv-saude"]:checked),
+.operadora-checkbox:has(input#liv-saude:checked) {
+    background: #F1F5F9;
+    border-color: #0F172A;
+}
+.operadora-checkbox[data-operadora="liv-saude"].selected .checkmark,
+.operadora-checkbox:has(input[value="liv-saude"]:checked) .checkmark,
+.operadora-checkbox:has(input#liv-saude:checked) .checkmark {
+    background: #0F172A;
+    border-color: #0F172A;
+}
+.operadora-checkbox[data-operadora="liv-saude"].selected .operadora-label,
+.operadora-checkbox[data-operadora="liv-saude"].selected .checkbox-label,
+.operadora-checkbox:has(input[value="liv-saude"]:checked) .operadora-label,
+.operadora-checkbox:has(input#liv-saude:checked) .operadora-label {
+    color: #0F172A;
 }
 
 /* Filtros Avançados (Drawer) */
@@ -621,7 +746,7 @@ body {
     background: var(--surface);
     border-radius: var(--radius-lg);
     padding: 24px;
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     transition: var(--transition);
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -694,6 +819,44 @@ body {
     background: var(--cta-light);
     color: var(--cta);
     border: 1px solid var(--cta-border);
+    transition: var(--transition);
+}
+
+/* Badges com cores oficiais por Operadora */
+.operadora-badge.amil {
+    background: #E0F2FE;
+    color: #0369A1;
+    border-color: #7DD3FC;
+}
+
+.operadora-badge.amil-selecionada {
+    background: #F0F9FF;
+    color: #0284C7;
+    border-color: #38BDF8;
+}
+
+.operadora-badge.bradesco {
+    background: #FEF2F2;
+    color: #B91C1C;
+    border-color: #FECACA;
+}
+
+.operadora-badge.sulamerica {
+    background: #FFF7ED;
+    color: #C2410C;
+    border-color: #FED7AA;
+}
+
+.operadora-badge.hapvida {
+    background: #EFF6FF;
+    color: #1E40AF;
+    border-color: #BFDBFE;
+}
+
+.operadora-badge.liv-saude {
+    background: #F1F5F9;
+    color: #0F172A;
+    border-color: #94A3B8;
 }
 
 .result-modalidades,
