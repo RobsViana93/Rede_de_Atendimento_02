@@ -284,10 +284,35 @@ permalink: /admin.html
                 <!-- Tab Visualizar Dados -->
                 <div id="view" class="tab-content">
                     <div class="view-section">
-                        <h2>Visualizar Dados Cadastrados</h2>
-                        <div class="view-controls">
-                            <div class="search-controls">
-                                <input type="text" id="viewSearch" placeholder="Buscar por nome, cidade ou estado...">
+                        <div class="view-header-row">
+                            <h2>Visualizar Dados Cadastrados</h2>
+                            <div class="view-header-actions">
+                                <button type="button" id="reloadViewDataBtn" class="btn btn-secondary btn-sm" title="Recarregar dados do banco">
+                                    <i class="fas fa-sync-alt"></i> Atualizar Dados
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Painel de Filtros -->
+                        <div class="view-filters-panel">
+                            <div class="filter-group">
+                                <label for="viewSearch"><i class="fas fa-search"></i> Busca Livre</label>
+                                <input type="text" id="viewSearch" placeholder="Nome, plano, etc...">
+                            </div>
+                            <div class="filter-group">
+                                <label for="viewEstado"><i class="fas fa-map-marker-alt"></i> Estado (UF)</label>
+                                <select id="viewEstado">
+                                    <option value="">Todos os Estados</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="viewCidade"><i class="fas fa-city"></i> Cidade</label>
+                                <select id="viewCidade">
+                                    <option value="">Todas as Cidades</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="viewFilter"><i class="fas fa-shield-alt"></i> Operadora</label>
                                 <select id="viewFilter">
                                     <option value="">Todas as operadoras</option>
                                     <option value="amil">Amil Padrão</option>
@@ -298,9 +323,45 @@ permalink: /admin.html
                                     <option value="liv-saude">Liv Saúde</option>
                                 </select>
                             </div>
+                            <div class="filter-actions-col">
+                                <button type="button" id="clearViewFiltersBtn" class="btn btn-outline btn-sm" title="Limpar todos os filtros">
+                                    <i class="fas fa-eraser"></i> Limpar
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Barra de Resumo e Ações em Grupo -->
+                        <div class="view-bulk-actions-bar">
+                            <div class="bulk-info">
+                                <span id="viewCountBadge" class="count-badge">Carregando registros...</span>
+                                <span id="selectedCountBadge" class="count-badge selected-badge" style="display: none;">0 selecionados</span>
+                            </div>
+                            <div class="bulk-buttons">
+                                <button type="button" id="btnExcluirSelecionados" class="btn btn-danger btn-sm" style="display: none;">
+                                    <i class="fas fa-check-square"></i> Excluir Selecionados (<span id="btnSelectedCount">0</span>)
+                                </button>
+                                <button type="button" id="btnExcluirGrupo" class="btn btn-danger btn-sm" disabled title="Aplique um filtro de Estado, Cidade, Operadora ou busca para excluir em grupo">
+                                    <i class="fas fa-trash-alt"></i> Excluir Grupo Filtrado
+                                </button>
+                            </div>
+                        </div>
+
                         <div id="dataTable" class="data-table">
                             <!-- Tabela de dados será inserida aqui -->
+                        </div>
+
+                        <!-- Paginação da Tabela -->
+                        <div id="viewPagination" class="view-pagination" style="display: none;">
+                            <span id="paginationInfo" class="pagination-info">Mostrando 1-50 de 0</span>
+                            <div class="pagination-buttons">
+                                <button type="button" id="btnPrevPage" class="btn btn-secondary btn-sm" disabled>
+                                    <i class="fas fa-chevron-left"></i> Anterior
+                                </button>
+                                <span id="paginationPageNum" class="page-num">Página 1</span>
+                                <button type="button" id="btnNextPage" class="btn btn-secondary btn-sm">
+                                    Próxima <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -690,7 +751,28 @@ function criarModalDuplicatas(duplicatas, callback) {
             const manualForm = document.getElementById('manualForm');
             const dataTable = document.getElementById('dataTable');
             const viewSearch = document.getElementById('viewSearch');
+            const viewEstado = document.getElementById('viewEstado');
+            const viewCidade = document.getElementById('viewCidade');
             const viewFilter = document.getElementById('viewFilter');
+            const clearViewFiltersBtn = document.getElementById('clearViewFiltersBtn');
+            const reloadViewDataBtn = document.getElementById('reloadViewDataBtn');
+            const viewCountBadge = document.getElementById('viewCountBadge');
+            const selectedCountBadge = document.getElementById('selectedCountBadge');
+            const btnExcluirSelecionados = document.getElementById('btnExcluirSelecionados');
+            const btnSelectedCount = document.getElementById('btnSelectedCount');
+            const btnExcluirGrupo = document.getElementById('btnExcluirGrupo');
+            const viewPagination = document.getElementById('viewPagination');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const btnPrevPage = document.getElementById('btnPrevPage');
+            const btnNextPage = document.getElementById('btnNextPage');
+            const paginationPageNum = document.getElementById('paginationPageNum');
+
+            // --- ESTADO DA TABELA DE VISUALIZAÇÃO ---
+            let itensSelecionados = new Set();
+            let paginaAtual = 1;
+            const ITENS_POR_PAGINA = 50;
+            let dadosFiltrados = [];
+            let dadosCarregadosComSucesso = false;
 
             // --- FUNÇÃO HANDLEFILE (ADICIONAR ESTA FUNÇÃO) ---
             function handleFile(file) {
@@ -748,7 +830,14 @@ function criarModalDuplicatas(duplicatas, callback) {
                 console.log('Carregando dados iniciais...');
                 hospitaisCollection.get().then(snapshot => {
                     dadosHospitais = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    dadosCarregadosComSucesso = true;
                     console.log(`${dadosHospitais.length} registros carregados com sucesso!`);
+                    popularFiltroEstados();
+                    popularFiltroCidades();
+                    const viewTabBtn = document.querySelector('[data-tab="view"]');
+                    if (viewTabBtn && viewTabBtn.classList.contains('active')) {
+                        aplicarFiltrosETabela(false);
+                    }
                 }).catch(error => {
                     console.error("Erro ao carregar dados iniciais: ", error);
                 });
@@ -927,60 +1016,8 @@ function criarModalDuplicatas(duplicatas, callback) {
     uploadPreview.classList.remove('hidden');
 }
 
-            // --- TABELA DE VISUALIZAÇÃO ---
-            function carregarTabelaDados() {
-                if (!dataTable) return;
-                
-                hospitaisCollection.get().then(snapshot => {
-                    const dados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    
-                    if (dados.length === 0) {
-                        dataTable.innerHTML = '<div style="padding: 40px; text-align: center; color: #8F8F8F;">Nenhum registro encontrado.</div>';
-                        return;
-                    }
+            // --- GESTÃO E FILTROS DA TABELA DE VISUALIZAÇÃO ---
 
-                    const tableHTML = `
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: rgba(158, 30, 76, 0.3);">
-                                    <th style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Nome</th>
-                                    <th style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Localização</th>
-                                    <th style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Tipo</th>
-                                    <th style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Operadoras</th>
-                                    <th style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${dados.map(item => `
-                                    <tr style="transition: background 0.3s ease;" onmouseover="this.style.background='rgba(255, 17, 104, 0.1)'" onmouseout="this.style.background='transparent'">
-                                        <td style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">${item.nome}</td>
-                                        <td style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #8F8F8F;">${item.cidade}, ${item.estado}</td>
-                                        <td style="padding: 15px; border-bottom: 1px solid #9E1E4C; color: #8F8F8F;">${item.tipo}</td>
-                                        <td style="padding: 15px; border-bottom: 1px solid #9E1E4C;">
-                                            ${(item.operadoras || []).map(op => 
-                                                `<span style="background: #9E1E4C; color: #ECECEC; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-right: 5px;">${getOperadoraNome(op)}</span>`
-                                            ).join('')}
-                                        </td>
-                                        <td style="padding: 15px; border-bottom: 1px solid #9E1E4C;">
-                                            <button onclick="excluirItem('${item.id}')" style="background: #9E1E4C; color: #ECECEC; border: 1px solid #FF1168; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
-                                                <i class="fas fa-trash"></i> Excluir
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                    
-                    dataTable.innerHTML = tableHTML;
-                    
-                }).catch(error => {
-                    console.error("Erro ao carregar dados da tabela:", error);
-                    dataTable.innerHTML = '<div style="padding: 40px; text-align: center; color: #FF1168;">Erro ao carregar dados.</div>';
-                });
-            }
-
-            // Função auxiliar
             function getOperadoraNome(op) {
                 const nomes = {
                     'amil': 'Amil',
@@ -993,19 +1030,487 @@ function criarModalDuplicatas(duplicatas, callback) {
                 return nomes[op] || op;
             }
 
-            // Função global para excluir
-            window.excluirItem = function(id) {
-                if (confirm('Tem certeza que deseja excluir este item?')) {
+            function popularFiltroEstados() {
+                if (!viewEstado) return;
+                const estadoSelecionadoAnterior = viewEstado.value;
+                const estadosSet = new Set();
+
+                dadosHospitais.forEach(item => {
+                    if (item.estado && item.estado.trim()) {
+                        estadosSet.add(item.estado.trim().toUpperCase());
+                    }
+                });
+
+                const estadosOrdenados = Array.from(estadosSet).sort();
+                let html = '<option value="">Todos os Estados</option>';
+                estadosOrdenados.forEach(uf => {
+                    html += `<option value="${uf}">${uf}</option>`;
+                });
+                viewEstado.innerHTML = html;
+
+                if (estadoSelecionadoAnterior && estadosSet.has(estadoSelecionadoAnterior)) {
+                    viewEstado.value = estadoSelecionadoAnterior;
+                }
+            }
+
+            function popularFiltroCidades() {
+                if (!viewCidade) return;
+                const cidadeSelecionadaAnterior = viewCidade.value;
+                const estadoFiltro = viewEstado ? viewEstado.value.trim().toUpperCase() : '';
+                const cidadesSet = new Set();
+
+                dadosHospitais.forEach(item => {
+                    const itemEstado = (item.estado || '').trim().toUpperCase();
+                    if (!estadoFiltro || itemEstado === estadoFiltro) {
+                        if (item.cidade && item.cidade.trim()) {
+                            cidadesSet.add(item.cidade.trim());
+                        }
+                    }
+                });
+
+                const cidadesOrdenadas = Array.from(cidadesSet).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                let html = '<option value="">Todas as Cidades</option>';
+                cidadesOrdenadas.forEach(cid => {
+                    html += `<option value="${cid}">${cid}</option>`;
+                });
+                viewCidade.innerHTML = html;
+
+                if (cidadeSelecionadaAnterior && cidadesSet.has(cidadeSelecionadaAnterior)) {
+                    viewCidade.value = cidadeSelecionadaAnterior;
+                }
+            }
+
+            function carregarTabelaDados(forcarRecarregar = false) {
+                if (!dataTable) return;
+
+                if (dadosCarregadosComSucesso && !forcarRecarregar && dadosHospitais.length > 0) {
+                    aplicarFiltrosETabela(false);
+                    return;
+                }
+
+                if (viewCountBadge) viewCountBadge.textContent = 'Carregando dados do banco...';
+                dataTable.innerHTML = '<div style="padding: 40px; text-align: center; color: #8F8F8F;"><i class="fas fa-spinner fa-spin fa-2x"></i><br><br>Carregando estabelecimentos...</div>';
+
+                hospitaisCollection.get().then(snapshot => {
+                    dadosHospitais = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    dadosCarregadosComSucesso = true;
+                    
+                    popularFiltroEstados();
+                    popularFiltroCidades();
+                    aplicarFiltrosETabela(true);
+                }).catch(error => {
+                    console.error("Erro ao carregar dados da tabela:", error);
+                    dataTable.innerHTML = '<div style="padding: 40px; text-align: center; color: #FF1168;">Erro ao carregar dados do banco.</div>';
+                    if (viewCountBadge) viewCountBadge.textContent = 'Erro ao carregar registros';
+                });
+            }
+
+            function aplicarFiltrosETabela(resetarPagina = false) {
+                if (resetarPagina) {
+                    paginaAtual = 1;
+                }
+
+                const termo = viewSearch ? normalizarString(viewSearch.value) : '';
+                const estado = viewEstado ? viewEstado.value.trim().toUpperCase() : '';
+                const cidade = viewCidade ? normalizarString(viewCidade.value) : '';
+                const operadora = viewFilter ? viewFilter.value.trim() : '';
+
+                const temFiltroAtivo = !!(termo || estado || cidade || operadora);
+
+                dadosFiltrados = dadosHospitais.filter(item => {
+                    if (termo) {
+                        const matchNome = normalizarString(item.nome).includes(termo);
+                        const matchCidade = normalizarString(item.cidade).includes(termo);
+                        const matchEstado = normalizarString(item.estado).includes(termo);
+                        const matchTipo = normalizarString(item.tipo).includes(termo);
+                        const matchPlanos = normalizarString(item.planos).includes(termo);
+                        const matchModalidades = normalizarString(item.modalidades).includes(termo);
+                        if (!matchNome && !matchCidade && !matchEstado && !matchTipo && !matchPlanos && !matchModalidades) {
+                            return false;
+                        }
+                    }
+
+                    if (estado) {
+                        const itemEstado = (item.estado || '').trim().toUpperCase();
+                        if (itemEstado !== estado) return false;
+                    }
+
+                    if (cidade) {
+                        if (normalizarString(item.cidade) !== cidade) return false;
+                    }
+
+                    if (operadora) {
+                        if (!item.operadoras || !Array.isArray(item.operadoras) || !item.operadoras.includes(operadora)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                // Ordenar por nome
+                dadosFiltrados.sort((a, b) => normalizarString(a.nome).localeCompare(normalizarString(b.nome)));
+
+                // Atualizar badge de contagem
+                if (viewCountBadge) {
+                    if (temFiltroAtivo) {
+                        viewCountBadge.textContent = `Exibindo ${dadosFiltrados.length} de ${dadosHospitais.length} registros (filtrado)`;
+                    } else {
+                        viewCountBadge.textContent = `Total de ${dadosHospitais.length} registros cadastrados`;
+                    }
+                }
+
+                // Configurar botão de exclusão de grupo filtrado
+                if (btnExcluirGrupo) {
+                    if (temFiltroAtivo && dadosFiltrados.length > 0) {
+                        btnExcluirGrupo.disabled = false;
+                        btnExcluirGrupo.innerHTML = `<i class="fas fa-trash-alt"></i> Excluir Grupo (${dadosFiltrados.length})`;
+                        
+                        let rotulos = [];
+                        if (estado) rotulos.push(`Estado: ${estado}`);
+                        if (cidade && viewCidade) rotulos.push(`Cidade: ${viewCidade.value}`);
+                        if (operadora) rotulos.push(`Operadora: ${getOperadoraNome(operadora)}`);
+                        if (termo && viewSearch) rotulos.push(`Busca: "${viewSearch.value}"`);
+
+                        btnExcluirGrupo.title = `Excluir todos os ${dadosFiltrados.length} estabelecimentos filtrados (${rotulos.join(', ')})`;
+                    } else {
+                        btnExcluirGrupo.disabled = true;
+                        btnExcluirGrupo.innerHTML = `<i class="fas fa-trash-alt"></i> Excluir Grupo Filtrado`;
+                        btnExcluirGrupo.title = "Aplique um filtro de Estado, Cidade, Operadora ou Busca para excluir em grupo";
+                    }
+                }
+
+                atualizarBadgeSelecionados();
+                renderizarTabela();
+            }
+
+            function atualizarBadgeSelecionados() {
+                const total = itensSelecionados.size;
+                if (selectedCountBadge) {
+                    if (total > 0) {
+                        selectedCountBadge.style.display = 'inline-flex';
+                        selectedCountBadge.textContent = `${total} selecionado(s)`;
+                    } else {
+                        selectedCountBadge.style.display = 'none';
+                    }
+                }
+
+                if (btnExcluirSelecionados) {
+                    if (total > 0) {
+                        btnExcluirSelecionados.style.display = 'inline-flex';
+                        if (btnSelectedCount) btnSelectedCount.textContent = total;
+                    } else {
+                        btnExcluirSelecionados.style.display = 'none';
+                    }
+                }
+            }
+
+            function renderizarTabela() {
+                if (!dataTable) return;
+
+                if (dadosFiltrados.length === 0) {
+                    dataTable.innerHTML = '<div style="padding: 40px; text-align: center; color: #8F8F8F;"><i class="fas fa-search fa-2x" style="color: #9E1E4C; margin-bottom: 12px;"></i><br>Nenhum registro encontrado com os filtros selecionados.</div>';
+                    if (viewPagination) viewPagination.style.display = 'none';
+                    return;
+                }
+
+                const totalItens = dadosFiltrados.length;
+                const totalPaginas = Math.ceil(totalItens / ITENS_POR_PAGINA);
+                if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+                if (paginaAtual < 1) paginaAtual = 1;
+
+                const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+                const fim = Math.min(inicio + ITENS_POR_PAGINA, totalItens);
+                const itensPagina = dadosFiltrados.slice(inicio, fim);
+
+                const todosPaginaSelecionados = itensPagina.length > 0 && itensPagina.every(item => itensSelecionados.has(item.id));
+
+                const tableHTML = `
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: rgba(158, 30, 76, 0.3);">
+                                <th style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; width: 45px; text-align: center;">
+                                    <input type="checkbox" id="selectAllPageCheckbox" class="admin-checkbox" ${todosPaginaSelecionados ? 'checked' : ''} title="Selecionar todos desta página">
+                                </th>
+                                <th style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Nome</th>
+                                <th style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Localização</th>
+                                <th style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Tipo</th>
+                                <th style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC;">Operadoras</th>
+                                <th style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC; width: 100px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itensPagina.map(item => {
+                                const isSelected = itensSelecionados.has(item.id);
+                                const nomeEscapado = (item.nome || '').replace(/'/g, "\\'");
+                                return `
+                                    <tr style="transition: background 0.2s ease; ${isSelected ? 'background: rgba(255, 17, 104, 0.15);' : ''}" onmouseover="if (!this.dataset.selected) this.style.background='rgba(255, 17, 104, 0.08)'" onmouseout="if (!this.dataset.selected) this.style.background='transparent'" data-selected="${isSelected ? 'true' : ''}">
+                                        <td style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; text-align: center;">
+                                            <input type="checkbox" class="admin-checkbox row-select-checkbox" data-id="${item.id}" ${isSelected ? 'checked' : ''}>
+                                        </td>
+                                        <td style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #ECECEC; font-weight: 500;">
+                                            ${item.nome || 'Sem nome'}
+                                            ${item.planos ? `<div style="font-size: 0.8rem; color: #8F8F8F; margin-top: 3px;">Planos: ${item.planos}</div>` : ''}
+                                        </td>
+                                        <td style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #8F8F8F;">
+                                            ${item.cidade || '—'}, ${item.estado || '—'}
+                                        </td>
+                                        <td style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; color: #8F8F8F;">
+                                            <span style="text-transform: capitalize;">${item.tipo || '—'}</span>
+                                        </td>
+                                        <td style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C;">
+                                            ${(item.operadoras || []).map(op => 
+                                                `<span style="background: #9E1E4C; color: #ECECEC; padding: 3px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px; display: inline-block; margin-bottom: 2px;">${getOperadoraNome(op)}</span>`
+                                            ).join('')}
+                                        </td>
+                                        <td style="padding: 12px 15px; border-bottom: 1px solid #9E1E4C; text-align: center;">
+                                            <button onclick="excluirItem('${item.id}', '${nomeEscapado}')" class="btn-action btn-delete" title="Excluir estabelecimento">
+                                                <i class="fas fa-trash"></i> Excluir
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                dataTable.innerHTML = tableHTML;
+
+                // Event listener checkbox "Selecionar Todos da Página"
+                const selectAllCb = document.getElementById('selectAllPageCheckbox');
+                if (selectAllCb) {
+                    selectAllCb.addEventListener('change', (e) => {
+                        const checked = e.target.checked;
+                        itensPagina.forEach(it => {
+                            if (checked) {
+                                itensSelecionados.add(it.id);
+                            } else {
+                                itensSelecionados.delete(it.id);
+                            }
+                        });
+                        atualizarBadgeSelecionados();
+                        renderizarTabela();
+                    });
+                }
+
+                // Event listeners checkboxes individuais de cada linha
+                document.querySelectorAll('.row-select-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        if (e.target.checked) {
+                            itensSelecionados.add(id);
+                        } else {
+                            itensSelecionados.delete(id);
+                        }
+                        atualizarBadgeSelecionados();
+                        const todosMarcados = itensPagina.every(it => itensSelecionados.has(it.id));
+                        if (selectAllCb) selectAllCb.checked = todosMarcados;
+                    });
+                });
+
+                // Paginação
+                if (viewPagination) {
+                    if (totalItens > ITENS_POR_PAGINA) {
+                        viewPagination.style.display = 'flex';
+                        if (paginationInfo) paginationInfo.textContent = `Mostrando ${inicio + 1}–${fim} de ${totalItens} registros`;
+                        if (paginationPageNum) paginationPageNum.textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+                        if (btnPrevPage) btnPrevPage.disabled = paginaAtual <= 1;
+                        if (btnNextPage) btnNextPage.disabled = paginaAtual >= totalPaginas;
+                    } else {
+                        viewPagination.style.display = 'none';
+                    }
+                }
+            }
+
+            // Exclusão individual
+            window.excluirItem = function(id, nome) {
+                const label = nome ? `"${nome}"` : 'este estabelecimento';
+                if (confirm(`Tem certeza que deseja excluir ${label}? Esta ação é permanente.`)) {
                     hospitaisCollection.doc(id).delete().then(() => {
                         alert('Item excluído com sucesso!');
-                        carregarTabelaDados();
-                        carregarDadosIniciais();
+                        dadosHospitais = dadosHospitais.filter(h => h.id !== id);
+                        itensSelecionados.delete(id);
+                        popularFiltroEstados();
+                        popularFiltroCidades();
+                        aplicarFiltrosETabela(false);
                     }).catch(error => {
                         console.error("Erro ao excluir:", error);
                         alert('Erro ao excluir o item.');
                     });
                 }
             };
+
+            // Modal de confirmação segura para exclusão em lote
+            function abrirModalConfirmacaoExclusao({ titulo, descricaoFiltros, idsParaExcluir, onConfirmado }) {
+                const total = idsParaExcluir.length;
+                if (total === 0) return;
+
+                const modalExistente = document.getElementById('bulkDeleteModal');
+                if (modalExistente) modalExistente.remove();
+
+                const modal = document.createElement('div');
+                modal.id = 'bulkDeleteModal';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.85);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10002;
+                    padding: 20px;
+                `;
+
+                // Amostra dos registros afetados
+                const amostra = dadosHospitais.filter(h => idsParaExcluir.includes(h.id)).slice(0, 4);
+
+                modal.innerHTML = `
+                    <div style="
+                        background: linear-gradient(135deg, #25020F 0%, #3D0419 100%);
+                        border: 2px solid #FF1168;
+                        border-radius: 16px;
+                        padding: 30px;
+                        max-width: 580px;
+                        width: 100%;
+                        color: #ECECEC;
+                        box-shadow: 0 10px 40px rgba(255, 17, 104, 0.4);
+                    ">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div style="background: rgba(255, 17, 104, 0.2); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #FF1168; flex-shrink: 0;">
+                                <i class="fas fa-exclamation-triangle" style="color: #FF1168; font-size: 1.6rem;"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.35rem; color: #ECECEC;">${titulo}</h3>
+                                <div style="color: #FF1168; font-weight: 600; font-size: 0.9rem; margin-top: 4px;">
+                                    Atenção: Esta ação é definitiva e não poderá ser desfeita!
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid #9E1E4C; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                            <div style="font-size: 0.95rem; margin-bottom: 8px;">
+                                <strong>Total a excluir:</strong> <span style="color: #FF1168; font-weight: bold; font-size: 1.15rem;">${total} registro(s)</span>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #ECECEC; margin-bottom: 10px;">
+                                <strong>Critérios:</strong> <span style="color: #FF1168;">${descricaoFiltros}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #8F8F8F;">
+                                <strong>Exemplos de estabelecimentos afetados:</strong>
+                                <ul style="margin: 6px 0 0 18px; padding: 0;">
+                                    ${amostra.map(a => `<li style="margin-bottom: 3px;"><strong>${a.nome}</strong> (${a.cidade || '—'}, ${a.estado || '—'})</li>`).join('')}
+                                    ${total > 4 ? `<li>... e mais ${total - 4} estabelecimento(s)</li>` : ''}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; font-size: 0.9rem; margin-bottom: 8px; color: #ECECEC;">
+                                Para confirmar a exclusão, digite a palavra <strong style="color: #FF1168; letter-spacing: 1px;">EXCLUIR</strong> abaixo:
+                            </label>
+                            <input type="text" id="confirmDeleteWordInput" placeholder="Digite EXCLUIR" autocomplete="off" style="
+                                width: 100%;
+                                padding: 12px 15px;
+                                border: 2px solid #9E1E4C;
+                                border-radius: 8px;
+                                background: #25020F;
+                                color: #ECECEC;
+                                font-size: 1rem;
+                                outline: none;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+
+                        <div id="deleteProgressBox" style="display: none; margin-bottom: 20px; text-align: center; color: #FF1168; font-weight: 500;">
+                            <i class="fas fa-spinner fa-spin"></i> <span id="deleteProgressText">Excluindo registros...</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                            <button type="button" id="btnCancelBulkDelete" class="btn btn-secondary">Cancelar</button>
+                            <button type="button" id="btnConfirmBulkDelete" class="btn btn-danger" disabled>
+                                <i class="fas fa-trash-alt"></i> Confirmar Exclusão
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                const inputWord = document.getElementById('confirmDeleteWordInput');
+                const btnConfirm = document.getElementById('btnConfirmBulkDelete');
+                const btnCancel = document.getElementById('btnCancelBulkDelete');
+                const progressBox = document.getElementById('deleteProgressBox');
+                const progressText = document.getElementById('deleteProgressText');
+
+                inputWord.focus();
+                inputWord.addEventListener('input', () => {
+                    const match = inputWord.value.trim().toUpperCase() === 'EXCLUIR';
+                    btnConfirm.disabled = !match;
+                });
+
+                btnCancel.addEventListener('click', () => {
+                    modal.remove();
+                });
+
+                btnConfirm.addEventListener('click', async () => {
+                    btnConfirm.disabled = true;
+                    btnCancel.disabled = true;
+                    inputWord.disabled = true;
+                    progressBox.style.display = 'block';
+
+                    try {
+                        await onConfirmado((msg) => {
+                            if (progressText) progressText.textContent = msg;
+                        });
+                        modal.remove();
+                    } catch (err) {
+                        console.error('Erro na exclusão em lote:', err);
+                        alert('Ocorreu um erro ao excluir os dados: ' + err.message);
+                        btnConfirm.disabled = false;
+                        btnCancel.disabled = false;
+                        inputWord.disabled = false;
+                        progressBox.style.display = 'none';
+                    }
+                });
+            }
+
+            // Rotina de exclusão em lotes (batch chunks de até 400 docs para segurança no Firestore)
+            async function processarExclusaoEmLotesFirestore(ids, onProgresso) {
+                const CHUNK_SIZE = 400;
+                const total = ids.length;
+
+                for (let i = 0; i < total; i += CHUNK_SIZE) {
+                    const chunk = ids.slice(i, i + CHUNK_SIZE);
+                    if (onProgresso) {
+                        onProgresso(`Excluindo ${Math.min(i + chunk.length, total)} de ${total} registros...`);
+                    }
+
+                    const batch = db.batch();
+                    chunk.forEach(id => {
+                        const ref = hospitaisCollection.doc(id);
+                        batch.delete(ref);
+                    });
+
+                    await batch.commit();
+                }
+
+                // Atualizar cache local
+                const idSetExcluidos = new Set(ids);
+                dadosHospitais = dadosHospitais.filter(h => !idSetExcluidos.has(h.id));
+
+                // Limpar seleção
+                ids.forEach(id => itensSelecionados.delete(id));
+
+                // Atualizar filtros e interface
+                popularFiltroEstados();
+                popularFiltroCidades();
+                aplicarFiltrosETabela(false);
+
+                alert(`${total} registro(s) excluído(s) com sucesso!`);
+            }
 
             // --- EVENT LISTENERS ---
             
@@ -1150,13 +1655,146 @@ function criarModalDuplicatas(duplicatas, callback) {
     }
 }
 
-            // Busca na visualização
-            if (viewSearch) {
-                viewSearch.addEventListener('input', carregarTabelaDados);
-            }
+            // --- EVENT LISTENERS DA ABA VISUALIZAR DADOS ---
             
+            // Debounce para busca de texto
+            let searchTimeout = null;
+            if (viewSearch) {
+                viewSearch.addEventListener('input', () => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        aplicarFiltrosETabela(true);
+                    }, 250);
+                });
+            }
+
+            // Filtro de Estado: atualiza as cidades disponíveis e reaplica filtros
+            if (viewEstado) {
+                viewEstado.addEventListener('change', () => {
+                    popularFiltroCidades();
+                    aplicarFiltrosETabela(true);
+                });
+            }
+
+            // Filtro de Cidade
+            if (viewCidade) {
+                viewCidade.addEventListener('change', () => {
+                    aplicarFiltrosETabela(true);
+                });
+            }
+
+            // Filtro de Operadora
             if (viewFilter) {
-                viewFilter.addEventListener('change', carregarTabelaDados);
+                viewFilter.addEventListener('change', () => {
+                    aplicarFiltrosETabela(true);
+                });
+            }
+
+            // Botão Limpar Filtros
+            if (clearViewFiltersBtn) {
+                clearViewFiltersBtn.addEventListener('click', () => {
+                    if (viewSearch) viewSearch.value = '';
+                    if (viewEstado) viewEstado.value = '';
+                    popularFiltroCidades();
+                    if (viewCidade) viewCidade.value = '';
+                    if (viewFilter) viewFilter.value = '';
+                    aplicarFiltrosETabela(true);
+                });
+            }
+
+            // Botão Atualizar Dados do Banco
+            if (reloadViewDataBtn) {
+                reloadViewDataBtn.addEventListener('click', () => {
+                    const icone = reloadViewDataBtn.querySelector('i');
+                    if (icone) icone.classList.add('fa-spin');
+                    reloadViewDataBtn.disabled = true;
+
+                    carregarTabelaDados(true);
+
+                    setTimeout(() => {
+                        if (icone) icone.classList.remove('fa-spin');
+                        reloadViewDataBtn.disabled = false;
+                    }, 800);
+                });
+            }
+
+            // Botão Excluir Grupo Filtrado
+            if (btnExcluirGrupo) {
+                btnExcluirGrupo.addEventListener('click', () => {
+                    const total = dadosFiltrados.length;
+                    if (total === 0) {
+                        alert('Nenhum registro selecionado pelos filtros atuais.');
+                        return;
+                    }
+
+                    const estado = viewEstado ? viewEstado.value.trim().toUpperCase() : '';
+                    const cidade = viewCidade ? viewCidade.value.trim() : '';
+                    const operadora = viewFilter ? viewFilter.value.trim() : '';
+                    const busca = viewSearch ? viewSearch.value.trim() : '';
+
+                    let rotulosFiltro = [];
+                    if (estado) rotulosFiltro.push(`Estado: ${estado}`);
+                    if (cidade) rotulosFiltro.push(`Cidade: ${cidade}`);
+                    if (operadora) rotulosFiltro.push(`Operadora: ${getOperadoraNome(operadora)}`);
+                    if (busca) rotulosFiltro.push(`Busca: "${busca}"`);
+
+                    const descricaoFiltros = rotulosFiltro.length > 0 
+                        ? rotulosFiltro.join(' | ') 
+                        : 'Todos os registros exibidos';
+
+                    const idsParaExcluir = dadosFiltrados.map(d => d.id);
+
+                    abrirModalConfirmacaoExclusao({
+                        titulo: `Exclusão em Grupo (${total} registros)`,
+                        descricaoFiltros: descricaoFiltros,
+                        idsParaExcluir: idsParaExcluir,
+                        onConfirmado: async (onProgresso) => {
+                            await processarExclusaoEmLotesFirestore(idsParaExcluir, onProgresso);
+                        }
+                    });
+                });
+            }
+
+            // Botão Excluir Selecionados via Checkbox
+            if (btnExcluirSelecionados) {
+                btnExcluirSelecionados.addEventListener('click', () => {
+                    const idsParaExcluir = Array.from(itensSelecionados);
+                    const total = idsParaExcluir.length;
+                    if (total === 0) {
+                        alert('Nenhum registro marcado para exclusão.');
+                        return;
+                    }
+
+                    abrirModalConfirmacaoExclusao({
+                        titulo: `Exclusão de Registros Selecionados`,
+                        descricaoFiltros: `${total} estabelecimento(s) selecionado(s) individualmente via caixa de seleção`,
+                        idsParaExcluir: idsParaExcluir,
+                        onConfirmado: async (onProgresso) => {
+                            await processarExclusaoEmLotesFirestore(idsParaExcluir, onProgresso);
+                        }
+                    });
+                });
+            }
+
+            // Paginação: Botão Anterior
+            if (btnPrevPage) {
+                btnPrevPage.addEventListener('click', () => {
+                    if (paginaAtual > 1) {
+                        paginaAtual--;
+                        renderizarTabela();
+                    }
+                });
+            }
+
+            // Paginação: Botão Próxima
+            if (btnNextPage) {
+                btnNextPage.addEventListener('click', () => {
+                    const totalPaginas = Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA);
+                    if (paginaAtual < totalPaginas) {
+                        paginaAtual++;
+                        renderizarTabela();
+                    }
+                });
             }
 
             // --- INICIALIZAÇÃO ---
