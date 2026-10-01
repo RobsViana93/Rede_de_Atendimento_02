@@ -1,0 +1,19 @@
+# Arquivo de configuração com credenciais do Firebase (mantido apenas localmente e no Hosting)
+firebase-config.js
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# Cache e logs do Firebase CLI
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Dependências
+node_modules/
