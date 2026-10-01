@@ -1615,6 +1615,35 @@ body {
     margin-right: auto;
 }
 
+.footer-admin {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(158, 30, 76, 0.25);
+}
+
+.footer-admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: rgba(143, 143, 143, 0.7);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: all 0.25s ease;
+    border: 1px solid transparent;
+}
+
+.footer-admin-link:hover {
+    color: #FF1168;
+    background: rgba(255, 17, 104, 0.08);
+    border-color: rgba(255, 17, 104, 0.3);
+}
+
+.footer-admin-link i {
+    font-size: 0.75rem;
+}
+
 /* Cores distintas por operadora (checkmarks e badges) */
 .checkmark.amil { border-color: #14B8A6; }
 .checkmark.amil-selecionada { border-color: #0EA5E9; }
