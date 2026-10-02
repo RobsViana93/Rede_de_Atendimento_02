@@ -1,10 +1,11 @@
-# Configuração do GitHub Pages (Jekyll)
-# Mantém todos os arquivos como estão e garante URLs limpas.
-include:
+# Compatibilidade com GitHub Pages/Jekyll; os HTMLs também são servidos diretamente.
+exclude:
   - firestore.rules
   - firebase.json
-defaults:
-  - scope:
-      path: "admin.html"
-    values:
-      permalink: "/admin.html"
+  - firebase.emulator.json
+  - env.example
+  - firebase-config.example.js
+  - generate-config.sh
+  - tests
+  - README.md
+  - download

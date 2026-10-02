@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS ---
     const hospitaisCollection = db.collection('hospitais');
+    const repositorio = RedeData.criarRepositorio(hospitaisCollection);
+    const refreshDataBtn = document.getElementById('refreshDataBtn');
+    const dataUpdatedAt = document.getElementById('dataUpdatedAt');
+    let carregando = false;
     let dadosHospitais = [];
     let resultadosFiltrados = [];
     let limiteExibicao = LOTE;
@@ -228,12 +232,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- CARREGAMENTO DOS DADOS DO FIREBASE ---
-    hospitaisCollection.onSnapshot(snapshot => {
-        dadosHospitais = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    async function carregarDados(forcar = false) {
+        if (carregando) return;
+        carregando = true;
+        refreshDataBtn.disabled = true;
+        mostrarLoading();
+        try {
+        dadosHospitais = await repositorio.carregar(forcar);
+        esconderLoading();
+        dataUpdatedAt.textContent = 'Dados atualizados às ' + new Date().toLocaleTimeString('pt-BR');
 
         if (dadosHospitais.length > 0) {
             realizarBusca();
         } else {
+            resultadosFiltrados = [];
+            resultSummary.classList.add('hidden');
+            noResults.classList.add('hidden');
             esconderLoading();
             resultsContainer.innerHTML = `
                 <div class="initial-message">
@@ -242,16 +256,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>Ainda não há estabelecimentos cadastrados no sistema.</p>
                 </div>`;
         }
-    }, error => {
+        } catch (error) {
         console.error('Erro ao conectar com Firebase:', error);
         esconderLoading();
+        dataUpdatedAt.textContent = 'Falha na atualização. Clique em Atualizar dados para tentar novamente.';
+        if (dadosHospitais.length) {
+            // Preserve the last successful result if a manual refresh fails.
+            realizarBusca();
+            return;
+        }
         resultsContainer.innerHTML = `
             <div class="initial-message error-message-box">
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3>Erro ao conectar com o banco de dados</h3>
                 <p>Verifique sua conexão com a internet e tente novamente.</p>
             </div>`;
-    });
+        } finally {
+            carregando = false;
+            refreshDataBtn.disabled = false;
+        }
+    }
+    refreshDataBtn.addEventListener('click', () => carregarDados(true));
 
     // --- EVENT LISTENERS ---
     const buscarDebounced = debounce(realizarBusca, 250);
@@ -316,4 +341,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INICIALIZAÇÃO ---
     atualizarCheckboxVisuals();
     inicializar();
+    carregarDados();
 });

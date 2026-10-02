@@ -47,6 +47,17 @@
 }
 
 /* Reset e Configurações Básicas */
+.data-refresh {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
 * {
     margin: 0;
     padding: 0;

@@ -9,12 +9,9 @@
 //   2. Preencha com os valores do SEU projeto:
 //        Console Firebase -> ícone da engrenagem -> Configurações
 //        do projeto -> "Seus apps" (Web) -> snippet firebaseConfig
-//   3. Ao publicar no GitHub Pages, faça o upload de
-//      firebase-config.js pelo painel do Render/Netlify OU gere-o
-//      em build-time (ver README). Em deploy estático simples,
-//      você precisará subir o firebase-config.js preenchido junto
-//      com os demais arquivos UMA ÚNICA VEZ — ele ficará fora do
-//      histórico do Git porque está no .gitignore.
+//   3. Firebase Hosting publica o arquivo local junto com o site.
+//      Em GitHub Pages, gere-o no job de publicação e inclua-o no
+//      artefato enviado. Ele não será enviado por um simples git push.
 //
 // LEMBRETE CRÍTICO: a apiKey do Firebase NÃO é um segredo — ela é
 // entregue ao navegador de todo visitante de qualquer site Firebase

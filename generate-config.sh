@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Gera firebase-config.js a partir do arquivo .env (uso local / CI).
 set -euo pipefail
-[ -f .env ] || { echo "Erro: crie o arquivo .env a partir de .env.example"; exit 1; }
+[ -f .env ] || { echo "Erro: crie o arquivo .env a partir de env.example"; exit 1; }
 set -a; source .env; set +a
 cat > firebase-config.js <<JS
 // ARQUIVO GERADO automaticamente por generate-config.sh — não edite, não versione.

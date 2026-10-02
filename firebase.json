@@ -6,6 +6,7 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "firebase.emulator.json",
       ".git/**",
       ".gitignore",
       "**/node_modules/**",
@@ -14,7 +15,14 @@
       "firebase-config.example.js",
       "generate-config.sh",
       "README.md",
-      "_config.yml"
+      "_config.yml",
+      ".firebase/**",
+      ".firebaserc",
+      ".env",
+      ".env.*",
+      "**/*.log",
+      "tests/**",
+      "download"
     ],
     "headers": [
       {
@@ -29,7 +37,7 @@
       {
         "source": "**/*.@(js|css)",
         "headers": [
-          { "key": "Cache-Control", "value": "max-age=86400" }
+          { "key": "Cache-Control", "value": "no-cache" }
         ]
       },
       {

@@ -150,6 +150,10 @@
             </section>
 
             <section class="results-section" aria-live="polite">
+                <div class="data-refresh">
+                    <span id="dataUpdatedAt" role="status">Carregando a rede credenciada...</span>
+                    <button type="button" id="refreshDataBtn" class="quick-action-btn">Atualizar dados</button>
+                </div>
                 <div id="resultSummary" class="result-summary hidden"></div>
 
                 <div id="loading" class="loading hidden">
@@ -189,6 +193,7 @@
     </script>
 
     <!-- Script principal -->
+    <script src="rede-data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
